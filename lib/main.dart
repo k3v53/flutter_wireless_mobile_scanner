@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_wireless_mobile_scanner/pages/scan.dart';
 import 'package:flutter_wireless_mobile_scanner/pages/scanner_list.dart';
+import 'package:flutter_wireless_mobile_scanner/pages/settings.dart';
 
 import 'pages/server.dart';
 
@@ -32,9 +33,14 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.blue,
       ),
       home: (Platform.isAndroid || Platform.isIOS || kIsWeb)
-          ? const ScanScreen()
+          ? ScanScreen()
           : const ServerScreen(),
-      routes: {'ScannerList': (context) => const ScannerList()},
+      routes: {
+        'Server': (context) => const ServerScreen(key: Key('ServerScreen')),
+        'Scan': (context) => ScanScreen(key: const Key('ScanScreen')),
+        'ScannerList': (context) => const ScannerList(),
+        'Settings': (context) => const Settings(key: Key('Settings'))
+      },
     );
   }
 }

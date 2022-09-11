@@ -1,8 +1,17 @@
+import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_wireless_mobile_scanner/data/scan.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
 class ScanScreen extends StatefulWidget {
-  const ScanScreen({super.key});
+  AudioPlayer player = AudioPlayer();
+  ScanScreen({super.key});
+
+  Future<void> beep() async {
+    await player.stop();
+    await player.play(AssetSource('beep.m4a'));
+  }
 
   @override
   State<ScanScreen> createState() => _ScanScreenState();
@@ -11,7 +20,8 @@ class ScanScreen extends StatefulWidget {
 class _ScanScreenState extends State<ScanScreen> {
   MobileScannerController cameraController = MobileScannerController();
   bool _isConnectedToServer = false;
-  String scannedData = "";
+  String Function() _lastScannedData =
+      () => scannedData.isNotEmpty ? scannedData.last : "";
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -70,26 +80,33 @@ class _ScanScreenState extends State<ScanScreen> {
           children: [
             Expanded(
               child: MobileScanner(
-                  allowDuplicates: true,
+                  allowDuplicates: false,
                   controller: cameraController,
                   onDetect: (barcode, args) {
                     if (barcode.rawValue == null) {
                       debugPrint('Failed to scan Barcode');
                     } else {
-                      final String code = barcode.rawValue!;
-                      scannedData = code;
-                      debugPrint('Barcode found! $code');
-                      setState(() {});
+                      widget.beep();
+                      setState(() {
+                        final String code = barcode.rawValue!;
+                        debugPrint('Barcode found! $code');
+
+                        scannedData.add(code);
+                      });
                     }
                   }),
             ),
-            Hero(
-              tag: "LastScan",
-              child: ListTile(
-                dense: scannedData.length > 50,
-                leading: const Icon(Icons.qr_code_scanner),
-                title: Text(scannedData),
-                onTap: () => Navigator.pushNamed(context, 'ScannerList'),
+            ConstrainedBox(
+              constraints: BoxConstraints(
+                  maxHeight: MediaQuery.of(context).size.height / 4),
+              child: Hero(
+                tag: "LastScan",
+                child: ListTile(
+                  dense: _lastScannedData().length > 50 || false,
+                  leading: const Icon(Icons.qr_code_scanner),
+                  title: Text(_lastScannedData()),
+                  onTap: () => Navigator.pushNamed(context, 'ScannerList'),
+                ),
               ),
             ),
           ],
